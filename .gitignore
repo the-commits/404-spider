@@ -1,0 +1,6 @@
+.idea
+*.log
+*.swp
+*.swo
+*.swn
+.vscode/

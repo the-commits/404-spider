@@ -2,6 +2,7 @@
 
 OUTPUT=""
 URL=""
+NUM_OF_PROCESS=1
 RESPONSE_CODE="404"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -23,12 +24,14 @@ print_title() {
 
 print_help() {
 	echo "Usage: $0 [OPTIONS]"
-	echo "This bash script is used to perform a wget operation on a specified URL, logging the output to a specified file. "
+	echo "This bash script is used to perform a wget operation on a specified URL, logging the output to a specified file."
 	echo "Options: "
-	echo "  --output         Specify the output file to which the log will be written."
-	echo "  --url            Specify the URL to be scanned with wget."
-	echo "  --response-code  Specify the HTTP response code to be targeted in the log output."
-	echo "  --help           Print this help message and exit."
+	echo "  --output            Specify the output file to which the log will be written."
+	echo "  --url               Specify the URL to be scanned with wget."
+	echo "  --response-code     Specify the HTTP response code to be targeted in the log output."
+	echo "  --number-of-process Specify the number of processes to be used. By default, it is set to 1."
+	echo "                      If auto specified, it will be set to the number of CPU cores available."
+	echo "  --help              Print this help message and exit."
 }
 
 while (("$#")); do
@@ -43,6 +46,10 @@ while (("$#")); do
 		;;
 	--response-code)
 		RESPONSE_CODE="$2"
+		shift 2
+		;;
+	--number-of-process)
+		NUM_OF_PROCESS="$2"
 		shift 2
 		;;
 	--help)
@@ -62,15 +69,22 @@ fi
 
 print_title
 
+if [ -n "$NUM_OF_PROCESS" ] && [ "$NUM_OF_PROCESS" == "auto" ]; then
+	NUM_OF_PROCESS=$(nproc)
+fi
+
 if [ -n "$OUTPUT" ] && [ -n "$URL" ] && [ -n "$RESPONSE_CODE" ]; then
-	wget --spider \
-		--output-file "$OUTPUT" \
-		--execute robots=off \
-		--recursive \
-		--page-requisites \
-		--no-directories \
-		--no-check-certificate \
-		"$URL"
+
+	xargs -n $NUM_OF_PROCESS -P $NUM_OF_PROCESS bash -c "wget --spider \
+    --append-output \"$OUTPUT\" \
+    --execute robots=off \
+    --recursive \
+    --page-requisites \
+    --no-directories \
+    --timestamping \
+    --no-check-certificate \
+    \"$URL\"" \
+		</dev/null
 fi
 
 if [ -n "$RESPONSE_CODE" ] && [ -n "$OUTPUT" ]; then

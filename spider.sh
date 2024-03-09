@@ -61,5 +61,6 @@ if [ -n "$OUTPUT" ] && [ -n "$URL" ]; then
     --no-check-certificate \
     "$URL"
 
-  tput setab 1; tput bold; grep -B 2 ' 404 ' "$OUTPUT"; tput sgr0
+  tput setab 1; tput setaf 2;
+  grep -B 2 ' 404 Not Found' "$OUTPUT" | awk 'NR%2==1'; tput sgr0
 fi
